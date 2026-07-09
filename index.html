@@ -251,7 +251,7 @@
   var auth = getAuth(fbApp);
   var db = getFirestore(fbApp);
 
-  var state = { view: "dashboard", currentLoanId: null, asOf: todayStr() };
+  var state = { view: "dashboard", currentLoanId: null, asOf: todayStr(), filterText: "", filterStatus: "all" };
   var loans = [];
   var currentUser = null;
   var unsubscribeLoans = null;
@@ -446,7 +446,16 @@
     var overdueCount = computed.filter(function (c) { return c.calc.status === "overdue"; }).length;
     var activeCount = computed.filter(function (c) { return c.calc.status !== "paid"; }).length;
 
-    var rows = computed.map(function (c) {
+    var filterText = (state.filterText || "").trim().toLowerCase();
+    var filterStatus = state.filterStatus || "all";
+    var filtered = computed.filter(function (c) {
+      if (filterStatus !== "all" && c.calc.status !== filterStatus) return false;
+      if (!filterText) return true;
+      var haystack = ((c.loan.borrowerName || "") + " " + (c.loan.coMakerName || "")).toLowerCase();
+      return haystack.indexOf(filterText) !== -1;
+    });
+
+    var rows = filtered.map(function (c) {
       var l = c.loan, k = c.calc;
       var dueText = k.status === "overdue" ? (k.daysOverdue + "d overdue")
         : k.status === "paid" ? "settled"
@@ -477,15 +486,37 @@
           '<div><div class="section-title">Loan book</div><div class="section-sub" style="margin:0;">Click a loan to view its ledger, schedule, and contract.</div></div>' +
           '<label class="field" style="width:170px;"><span>Calculate as of</span><input type="date" id="asof-input" value="' + asOf + '"></label>' +
         '</div>' +
+        (loans.length === 0 ? '' :
+        '<div class="row-between" style="margin-top:14px;">' +
+          '<label class="field" style="flex:1;min-width:200px;"><span>Search borrowers</span><input type="text" id="filter-text" placeholder="Borrower or co-maker name" value="' + esc(state.filterText || "") + '"></label>' +
+          '<label class="field" style="width:170px;"><span>Status</span>' +
+            '<select id="filter-status">' +
+              ['all', 'active', 'due_soon', 'overdue', 'paid'].map(function (s) {
+                var label = s === "all" ? "All statuses" : STATUS_LABEL[s];
+                return '<option value="' + s + '"' + (filterStatus === s ? " selected" : "") + '>' + label + '</option>';
+              }).join("") +
+            '</select></label>' +
+        '</div>') +
       '</div>' +
       (loans.length === 0
         ? '<div class="card empty-state"><h3>No loans yet</h3><p>Start by creating a loan under “New Loan.” It will generate a filled-in copy of the Emergency Loan Agreement and begin tracking interest and penalties automatically.</p></div>'
+        : filtered.length === 0
+        ? '<div class="card empty-state"><h3>No borrowers match</h3><p>Try a different name or set status back to “All statuses.”</p></div>'
         : '<div class="card table-wrap"><table><thead><tr><th>Borrower</th><th class="num">Principal</th><th class="num">Total due now</th><th>Status</th><th>Timing</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
       );
 
     wireHeader();
     var asofInput = document.getElementById("asof-input");
     if (asofInput) asofInput.addEventListener("change", function (e) { state.asOf = e.target.value || todayStr(); renderDashboard(); });
+    var filterTextInput = document.getElementById("filter-text");
+    if (filterTextInput) {
+      filterTextInput.addEventListener("input", function (e) { state.filterText = e.target.value; renderDashboard(); });
+      var caret = filterTextInput.value.length;
+      filterTextInput.focus();
+      filterTextInput.setSelectionRange(caret, caret);
+    }
+    var filterStatusSelect = document.getElementById("filter-status");
+    if (filterStatusSelect) filterStatusSelect.addEventListener("change", function (e) { state.filterStatus = e.target.value; renderDashboard(); });
     document.querySelectorAll("tr[data-loan]").forEach(function (tr) {
       tr.addEventListener("click", function () { state.view = "detail"; state.currentLoanId = tr.getAttribute("data-loan"); render(); });
     });
