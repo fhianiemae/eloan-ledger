@@ -596,11 +596,7 @@
     });
     if (isEdit) {
       document.getElementById("delete-btn").addEventListener("click", function () {
-        if (confirm("Delete this loan and its full payment history? This cannot be undone.")) {
-          deleteDoc(doc(db, "loans", l.id)).then(function () {
-            state.view = "dashboard"; render();
-          }).catch(function (err) { showToast("Couldn't delete: " + err.message); });
-        }
+        deleteLoanWithConfirm(l, "Delete this loan and its full payment history? This cannot be undone.");
       });
     }
   }
@@ -608,6 +604,13 @@
     extra = extra || {};
     var attrs = Object.keys(extra).map(function (k) { return k + '="' + extra[k] + '"'; }).join(" ");
     return '<label class="field"><span>' + label + '</span><input type="' + type + '" name="' + name + '" value="' + esc(value) + '" ' + attrs + '></label>';
+  }
+
+  function deleteLoanWithConfirm(loan, message) {
+    if (!confirm(message)) return;
+    deleteDoc(doc(db, "loans", loan.id)).then(function () {
+      state.view = "dashboard"; render();
+    }).catch(function (err) { showToast("Couldn't delete: " + err.message); });
   }
 
   function renderDetail(loan) {
@@ -640,6 +643,7 @@
           (k.coMakerLiable ? '<span class="chip chip-overdue">Co-maker liable</span>' : '') +
           '<button class="btn btn-sm" id="edit-btn">Edit</button>' +
           '<button class="btn btn-sm" id="print-btn">Download contract</button>' +
+          (k.status === "paid" ? '<button class="btn btn-sm btn-danger" id="delete-client-btn">Delete client</button>' : '') +
         '</div>' +
       '</div>' +
       (k.coMakerLiable ? '<div class="callout critical"><span>⚠️</span><span><strong>' + k.daysOverdue + ' day(s) overdue.</strong> Per §7, the Lender may now demand payment from the Co-Maker (' + esc(loan.coMakerName || "unnamed") + ') for the full outstanding balance.</span></div>' : '') +
@@ -674,6 +678,10 @@
     document.getElementById("back-btn").addEventListener("click", function () { state.view = "dashboard"; render(); });
     document.getElementById("edit-btn").addEventListener("click", function () { state.view = "edit"; render(); });
     document.getElementById("print-btn").addEventListener("click", function () { printContract(loan); });
+    var deleteClientBtn = document.getElementById("delete-client-btn");
+    if (deleteClientBtn) deleteClientBtn.addEventListener("click", function () {
+      deleteLoanWithConfirm(loan, "Remove " + (loan.borrowerName || "this client") + "? Their loan is paid in full — this deletes the record permanently.");
+    });
     document.getElementById("asof-input").addEventListener("change", function (e) { state.asOf = e.target.value || todayStr(); render(); });
     document.getElementById("payment-form").addEventListener("submit", function (e) {
       e.preventDefault();
