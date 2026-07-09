@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emergency Loan Ledger</title>
+<style>
+  :root {
+    --bg: #F5F6F4;
+    --surface: #FFFFFF;
+    --surface-raised: #FBFBFA;
+    --ink: #1B211D;
+    --muted: #5C665F;
+    --faint: #8A938C;
+    --border: #DDE2DC;
+    --accent: #2B4C6F;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E7EDF3;
+    --gold: #8A6D3B;
+    --gold-soft: #F1EADA;
+    --success: #2F7D5A;
+    --success-bg: #E4F1EA;
+    --warning: #B5842A;
+    --warning-bg: #F5EBD9;
+    --critical: #B23A34;
+    --critical-bg: #F6E2E0;
+    --shadow: 0 1px 2px rgba(27,33,29,0.06), 0 4px 14px rgba(27,33,29,0.05);
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10140F;
+      --surface: #171E19;
+      --surface-raised: #1D2521;
+      --ink: #E8ECE8;
+      --muted: #93A199;
+      --faint: #6B776F;
+      --border: #2A322C;
+      --accent: #7CA3CB;
+      --accent-ink: #0E1B27;
+      --accent-soft: #1E2A34;
+      --gold: #D3B463;
+      --gold-soft: #2C2717;
+      --success: #55B98F;
+      --success-bg: #17281F;
+      --warning: #E0B155;
+      --warning-bg: #2B2515;
+      --critical: #E97D77;
+      --critical-bg: #2C1917;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10140F; --surface: #171E19; --surface-raised: #1D2521; --ink: #E8ECE8; --muted: #93A199; --faint: #6B776F;
+    --border: #2A322C; --accent: #7CA3CB; --accent-ink: #0E1B27; --accent-soft: #1E2A34; --gold: #D3B463; --gold-soft: #2C2717;
+    --success: #55B98F; --success-bg: #17281F; --warning: #E0B155; --warning-bg: #2B2515; --critical: #E97D77; --critical-bg: #2C1917;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #F5F6F4; --surface: #FFFFFF; --surface-raised: #FBFBFA; --ink: #1B211D; --muted: #5C665F; --faint: #8A938C;
+    --border: #DDE2DC; --accent: #2B4C6F; --accent-ink: #FFFFFF; --accent-soft: #E7EDF3; --gold: #8A6D3B; --gold-soft: #F1EADA;
+    --success: #2F7D5A; --success-bg: #E4F1EA; --warning: #B5842A; --warning-bg: #F5EBD9; --critical: #B23A34; --critical-bg: #F6E2E0;
+    --shadow: 0 1px 2px rgba(27,33,29,0.06), 0 4px 14px rgba(27,33,29,0.05);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+  button { font-family: inherit; }
+  a { color: var(--accent); }
+
+  .shell { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  .topbar {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+  }
+  .brand { display: flex; flex-direction: column; gap: 2px; }
+  .brand .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gold);
+  }
+  .brand h1 {
+    font-family: var(--font-display); font-weight: 600; font-size: 27px; margin: 0;
+    text-wrap: balance; letter-spacing: -0.01em;
+  }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .user-email { font-size: 12.5px; color: var(--muted); margin-right: 4px; }
+
+  nav.tabs {
+    display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+  }
+  nav.tabs button {
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 13.5px; font-weight: 600; padding: 10px 14px; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color .15s ease, border-color .15s ease;
+  }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: var(--accent-soft); border-color: transparent; }
+  .btn-danger { color: var(--critical); }
+  .btn-danger:hover { border-color: var(--critical); }
+  .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+  .stat-card { padding: 16px 18px; }
+  .stat-card .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .stat-card .value {
+    font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 600;
+    margin-top: 6px; color: var(--ink);
+  }
+  .stat-card .value.gold { color: var(--gold); }
+  .stat-card .value.critical { color: var(--critical); }
+  .stat-card .sub { font-size: 12px; color: var(--faint); margin-top: 3px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  .table-wrap { overflow-x: auto; }
+  th, td { text-align: left; padding: 10px 14px; font-size: 13.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; background: var(--surface-raised); }
+  tbody tr:hover { background: var(--surface-raised); cursor: pointer; }
+  td.num, th.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  td.name { white-space: normal; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.01em;
+  }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip-active { background: var(--accent-soft); color: var(--accent); }
+  .chip-due_soon { background: var(--warning-bg); color: var(--warning); }
+  .chip-overdue { background: var(--critical-bg); color: var(--critical); }
+  .chip-paid { background: var(--success-bg); color: var(--success); }
+
+  .empty-state { padding: 48px 24px; text-align: center; color: var(--muted); }
+  .empty-state h3 { font-family: var(--font-display); font-size: 19px; color: var(--ink); margin: 0 0 6px; }
+
+  .callout {
+    display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--gold-soft); font-size: 13px; color: var(--ink); margin-bottom: 20px;
+  }
+  .callout strong { color: var(--gold); }
+  .callout.critical { background: var(--critical-bg); border-color: transparent; }
+  .callout.critical strong { color: var(--critical); }
+
+  details.howitworks { margin-bottom: 20px; }
+  details.howitworks summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--accent); padding: 4px 0; }
+  details.howitworks .body { font-size: 13.5px; color: var(--muted); padding: 10px 2px 4px; max-width: 66ch; }
+  details.howitworks .body ol { padding-left: 20px; }
+  details.howitworks .body li { margin-bottom: 6px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .form-grid .span2 { grid-column: 1 / -1; }
+  label.field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  input, textarea, select {
+    font-family: inherit; font-size: 14px; padding: 9px 10px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); width: 100%;
+  }
+  textarea { resize: vertical; min-height: 64px; font-family: inherit; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); font-size: 13.5px; }
+  .checkbox-row input { width: 16px; height: 16px; }
+  fieldset { border: 1px dashed var(--border); border-radius: 10px; padding: 14px 16px; margin: 0; }
+  legend { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0 6px; }
+
+  .section-title { font-family: var(--font-display); font-size: 19px; margin: 0 0 4px; }
+  .section-sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+
+  .pad { padding: 20px 22px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .detail-header h2 { font-family: var(--font-display); font-size: 24px; margin: 0 0 4px; text-wrap: balance; }
+  .detail-header .meta { color: var(--muted); font-size: 13px; }
+  .badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .amount-hero { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 15px; color: var(--gold); font-weight: 600; }
+
+  .ledger-row.type-payment td.num { color: var(--success); }
+  .ledger-row.type-interest td.num { color: var(--gold); }
+  .ledger-row.type-penalty td.num { color: var(--critical); }
+
+  .back-link { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; margin-bottom: 12px; background: none; border: none; padding: 0; }
+  .back-link:hover { color: var(--accent); }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(0);
+    background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 600;
+    padding: 10px 16px; border-radius: 8px; box-shadow: var(--shadow); z-index: 999;
+    opacity: 1; transition: opacity .25s ease, transform .25s ease; max-width: 80vw; text-align: center;
+  }
+  .toast.hide { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+  .auth-shell { max-width: 380px; margin: 12vh auto 0; padding: 0 20px; }
+  .auth-card { padding: 28px 26px; }
+  .auth-card .brand { margin-bottom: 22px; }
+  .auth-error { color: var(--critical); font-size: 13px; margin-top: 10px; min-height: 1em; }
+  .auth-card form { display: flex; flex-direction: column; gap: 14px; }
+
+  @media (max-width: 760px) {
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell" id="app"><div class="pad">Loading…</div></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import {
+    getFirestore, collection, query, where, onSnapshot,
+    addDoc, updateDoc, deleteDoc, doc
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  var fbApp = initializeApp(firebaseConfig);
+  var auth = getAuth(fbApp);
+  var db = getFirestore(fbApp);
+
+  var state = { view: "dashboard", currentLoanId: null, asOf: todayStr() };
+  var loans = [];
+  var currentUser = null;
+  var unsubscribeLoans = null;
+
+  // ---------- date helpers ----------
+  function todayStr() { return fmt(new Date()); }
+  function parseDate(s) { return new Date(s + "T00:00:00"); }
+  function fmt(d) {
+    var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+  function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  function humanDate(s) {
+    if (!s) return "—";
+    var d = parseDate(s);
+    return d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" });
+  }
+  function round2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+  function peso(n) {
+    return "₱" + (n < 0 ? "-" : "") + Math.abs(round2(n)).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  // ---------- calculation engine ----------
+  // Interest is simple (non-compounding) on the outstanding principal only; the 20%/30% weekly
+  // rate and the 3%/day penalty both stop accruing once the principal itself reaches zero, even
+  // if unpaid interest/penalty balances remain — see the "How calculations work" panel.
+  function computeLoan(loan, asOfStr) {
+    var start = parseDate(loan.agreementDate);
+    var asOf = parseDate(asOfStr);
+    var maturity = addDays(start, 28);
+    var principal = round2(Number(loan.principal) || 0);
+    var interestAccrued = 0, penaltyAccrued = 0;
+    var totalInterestBilled = 0, totalPenaltyBilled = 0, totalPrincipalPaid = 0, totalPaid = 0;
+    var ledger = [], weekSchedule = [];
+
+    var paymentsByDate = {};
+    (loan.payments || []).forEach(function (p) {
+      paymentsByDate[p.date] = round2((paymentsByDate[p.date] || 0) + Number(p.amount));
+    });
+
+    function applyPayment(amount, dateStr) {
+      var remaining = round2(amount);
+      totalPaid = round2(totalPaid + remaining);
+      var payPenalty = round2(Math.min(remaining, penaltyAccrued));
+      penaltyAccrued = round2(penaltyAccrued - payPenalty); remaining = round2(remaining - payPenalty);
+      var payInterest = round2(Math.min(remaining, interestAccrued));
+      interestAccrued = round2(interestAccrued - payInterest); remaining = round2(remaining - payInterest);
+      var payPrincipal = round2(Math.min(remaining, principal));
+      principal = round2(principal - payPrincipal); totalPrincipalPaid = round2(totalPrincipalPaid + payPrincipal);
+      remaining = round2(remaining - payPrincipal);
+      ledger.push({ date: dateStr, type: "payment", desc: "Payment received", amount: amount,
+        breakdown: { penalty: payPenalty, interest: payInterest, principal: payPrincipal, overpaid: remaining },
+        principalAfter: principal });
+    }
+
+    if (paymentsByDate[loan.agreementDate] != null) {
+      applyPayment(paymentsByDate[loan.agreementDate], loan.agreementDate);
+    }
+
+    var cur = new Date(start), dayIndex = 0;
+    while (cur < asOf) {
+      var next = addDays(cur, 1);
+      dayIndex++;
+      if (cur >= maturity && principal > 0) {
+        var dailyPenalty = round2(principal * 0.03);
+        penaltyAccrued = round2(penaltyAccrued + dailyPenalty);
+        totalPenaltyBilled = round2(totalPenaltyBilled + dailyPenalty);
+      }
+      if (dayIndex % 7 === 0 && principal > 0) {
+        var rate = next <= maturity ? 0.20 : 0.30;
+        var interest = round2(principal * rate);
+        interestAccrued = round2(interestAccrued + interest);
+        totalInterestBilled = round2(totalInterestBilled + interest);
+        weekSchedule.push({ weekNum: dayIndex / 7, start: fmt(addDays(cur, -6)), end: fmt(next), rate: rate, principalBasis: principal, interest: interest });
+        ledger.push({ date: fmt(next), type: "interest", desc: "Week " + (dayIndex / 7) + " interest (" + (rate * 100).toFixed(0) + "%)", amount: interest, principalAfter: principal });
+      }
+      var key = fmt(next);
+      if (paymentsByDate[key] != null && key !== loan.agreementDate) {
+        applyPayment(paymentsByDate[key], key);
+      }
+      cur = next;
+    }
+
+    ledger.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+
+    var totalDue = round2(principal + interestAccrued + penaltyAccrued);
+    var isOverdue = asOf > maturity && principal > 0.005;
+    var daysOverdue = isOverdue ? Math.floor((asOf - maturity) / 86400000) : 0;
+    var daysToMaturity = Math.ceil((maturity - asOf) / 86400000);
+    var status;
+    if (totalDue <= 0.005) status = "paid";
+    else if (isOverdue) status = "overdue";
+    else if (daysToMaturity <= 3) status = "due_soon";
+    else status = "active";
+
+    return {
+      maturity: fmt(maturity), principalOutstanding: principal, interestAccrued: interestAccrued,
+      penaltyAccrued: penaltyAccrued, totalDue: totalDue, totalPaid: totalPaid, totalPrincipalPaid: totalPrincipalPaid,
+      totalInterestBilled: totalInterestBilled, totalPenaltyBilled: totalPenaltyBilled, ledger: ledger,
+      weekSchedule: weekSchedule, status: status, isOverdue: isOverdue, daysOverdue: daysOverdue,
+      daysToMaturity: daysToMaturity, coMakerLiable: status === "overdue"
+    };
+  }
+
+  var STATUS_LABEL = { active: "Active", due_soon: "Due soon", overdue: "Overdue", paid: "Paid in full" };
+
+  // ---------- auth ----------
+  onAuthStateChanged(auth, function (user) {
+    currentUser = user;
+    if (unsubscribeLoans) { unsubscribeLoans(); unsubscribeLoans = null; }
+    if (user) {
+      var q = query(collection(db, "loans"), where("ownerId", "==", user.uid));
+      unsubscribeLoans = onSnapshot(q, function (snap) {
+        loans = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        if (state.view === "dashboard" || state.view === "detail") render();
+      }, function (err) {
+        showToast("Sync error: " + err.message);
+      });
+      state.view = "dashboard";
+      render();
+    } else {
+      loans = [];
+      renderLogin();
+    }
+  });
+
+  function renderLogin() {
+    app.innerHTML =
+      '<div class="auth-shell"><div class="card auth-card">' +
+        '<div class="brand"><span class="eyebrow">Private lending · Philippines</span><h1 style="font-size:22px;">Emergency Loan Ledger</h1></div>' +
+        '<form id="login-form">' +
+          '<label class="field"><span>Email</span><input type="email" name="email" required autocomplete="username"></label>' +
+          '<label class="field"><span>Password</span><input type="password" name="password" required autocomplete="current-password"></label>' +
+          '<button type="submit" class="btn btn-primary">Sign in</button>' +
+          '<div class="auth-error" id="login-error"></div>' +
+        '</form>' +
+      '</div></div>';
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var errEl = document.getElementById("login-error");
+      errEl.textContent = "";
+      signInWithEmailAndPassword(auth, fd.get("email"), fd.get("password")).catch(function (err) {
+        errEl.textContent = "Couldn't sign in: " + err.message.replace("Firebase: ", "");
+      });
+    });
+  }
+
+  // ---------- rendering ----------
+  var app = document.getElementById("app");
+
+  function render() {
+    if (state.view === "dashboard") renderDashboard();
+    else if (state.view === "new") renderLoanForm(null);
+    else if (state.view === "edit") renderLoanForm(findLoan(state.currentLoanId));
+    else if (state.view === "detail") renderDetail(findLoan(state.currentLoanId));
+    else if (state.view === "howitworks") renderHowItWorks();
+  }
+
+  function findLoan(id) { return loans.find(function (l) { return l.id === id; }); }
+
+  function shellHeader(activeTab) {
+    return (
+      '<div class="topbar">' +
+        '<div class="brand"><span class="eyebrow">Private lending · Philippines</span>' +
+        '<h1>Emergency Loan Ledger</h1></div>' +
+        '<div class="topbar-actions">' +
+          '<span class="user-email">' + esc(currentUser ? currentUser.email : "") + '</span>' +
+          '<button class="btn" id="btn-export">Export JSON</button>' +
+          '<label class="btn" style="margin:0;cursor:pointer;">Import JSON<input type="file" id="file-import" accept="application/json" style="display:none;"></label>' +
+          '<button class="btn" id="btn-signout">Sign out</button>' +
+        '</div>' +
+      '</div>' +
+      '<nav class="tabs">' +
+        tabBtn("dashboard", "Dashboard", activeTab) +
+        tabBtn("new", "New Loan", activeTab) +
+        tabBtn("howitworks", "How calculations work", activeTab) +
+      '</nav>'
+    );
+  }
+  function tabBtn(key, label, active) {
+    return '<button data-tab="' + key + '" class="' + (active === key ? "active" : "") + '">' + label + "</button>";
+  }
+
+  function renderDashboard() {
+    var asOf = state.asOf;
+    var computed = loans.map(function (l) { return { loan: l, calc: computeLoan(l, asOf) }; });
+    var totalPrincipal = round2(computed.reduce(function (s, c) { return s + c.calc.principalOutstanding; }, 0));
+    var totalAccrued = round2(computed.reduce(function (s, c) { return s + c.calc.interestAccrued + c.calc.penaltyAccrued; }, 0));
+    var overdueCount = computed.filter(function (c) { return c.calc.status === "overdue"; }).length;
+    var activeCount = computed.filter(function (c) { return c.calc.status !== "paid"; }).length;
+
+    var rows = computed.map(function (c) {
+      var l = c.loan, k = c.calc;
+      var dueText = k.status === "overdue" ? (k.daysOverdue + "d overdue")
+        : k.status === "paid" ? "settled"
+        : (k.daysToMaturity + "d to maturity");
+      return (
+        '<tr data-loan="' + l.id + '">' +
+          '<td class="name"><strong>' + esc(l.borrowerName || "Unnamed borrower") + '</strong><br>' +
+            '<span style="color:var(--faint);font-size:12px;">Co-maker: ' + esc(l.coMakerName || "—") + '</span></td>' +
+          '<td class="num">' + peso(l.principal) + '</td>' +
+          '<td class="num" style="color:var(--gold);">' + peso(k.totalDue) + '</td>' +
+          '<td><span class="chip chip-' + k.status + '">' + STATUS_LABEL[k.status] + '</span></td>' +
+          '<td style="font-size:12.5px;color:var(--muted);">' + dueText + '</td>' +
+          '<td>' + (k.coMakerLiable ? '<span class="chip chip-overdue">Co-maker liable</span>' : "") + '</td>' +
+        '</tr>'
+      );
+    }).join("");
+
+    app.innerHTML =
+      shellHeader("dashboard") +
+      '<div class="stat-row">' +
+        statCard("Open loans", activeCount, "of " + loans.length + " total") +
+        statCard("Principal outstanding", peso(totalPrincipal), "across all open loans") +
+        statCard("Interest + penalty accrued", peso(totalAccrued), "unpaid, as of " + humanDate(asOf), "gold") +
+        statCard("Overdue → co-maker liable", overdueCount, overdueCount ? "guarantor may be called on" : "none right now", overdueCount ? "critical" : "") +
+      '</div>' +
+      '<div class="card pad" style="margin-bottom:18px;">' +
+        '<div class="row-between">' +
+          '<div><div class="section-title">Loan book</div><div class="section-sub" style="margin:0;">Click a loan to view its ledger, schedule, and contract.</div></div>' +
+          '<label class="field" style="width:170px;"><span>Calculate as of</span><input type="date" id="asof-input" value="' + asOf + '"></label>' +
+        '</div>' +
+      '</div>' +
+      (loans.length === 0
+        ? '<div class="card empty-state"><h3>No loans yet</h3><p>Start by creating a loan under “New Loan.” It will generate a filled-in copy of the Emergency Loan Agreement and begin tracking interest and penalties automatically.</p></div>'
+        : '<div class="card table-wrap"><table><thead><tr><th>Borrower</th><th class="num">Principal</th><th class="num">Total due now</th><th>Status</th><th>Timing</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+      );
+
+    wireHeader();
+    var asofInput = document.getElementById("asof-input");
+    if (asofInput) asofInput.addEventListener("change", function (e) { state.asOf = e.target.value || todayStr(); renderDashboard(); });
+    document.querySelectorAll("tr[data-loan]").forEach(function (tr) {
+      tr.addEventListener("click", function () { state.view = "detail"; state.currentLoanId = tr.getAttribute("data-loan"); render(); });
+    });
+  }
+
+  function statCard(label, value, sub, tone) {
+    return '<div class="card stat-card"><div class="label">' + label + '</div><div class="value' + (tone ? " " + tone : "") + '">' + value + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '') + '</div>';
+  }
+
+  function renderHowItWorks() {
+    app.innerHTML =
+      shellHeader("howitworks") +
+      '<div class="card pad" style="max-width:70ch;">' +
+        '<div class="section-title">How this ledger reads the Agreement</div>' +
+        '<p class="section-sub">These are operational readings of Sections 3–5 of the Agreement, chosen so every loan can be calculated consistently. They are not legal advice — given the rates involved (20%/week, rising to 30%/week, plus 3%/day penalties), have the agreement and these assumptions reviewed by counsel before relying on them for a real transaction.</p>' +
+        '<ol style="font-size:13.5px;color:var(--ink);padding-left:20px;">' +
+          '<li><strong>Weekly interest (§3).</strong> Charged at the end of each 7-day period from the agreement date, on the principal balance outstanding at the start of that period — 20% for weeks 1–4 (up to and including the maturity date), automatically 30% for every week after. Interest is simple: it is not charged on unpaid interest or unpaid penalties, only on principal.</li>' +
+          '<li><strong>Late penalty (§5).</strong> 3% per day on the unpaid principal balance, starting the day after the maturity date, for every day the principal remains unpaid — in addition to weekly interest. It stops accruing once the principal itself is fully paid, even if interest arrears remain.</li>' +
+          '<li><strong>Payment allocation.</strong> Each payment is applied first to outstanding penalties, then outstanding interest, then principal — a common lender-side convention, not stated explicitly in the Agreement. Adjust this in practice if you and the borrower agree otherwise.</li>' +
+          '<li><strong>Default &amp; co-maker liability (§6–7).</strong> A loan is flagged “Overdue → co-maker liable” once it passes the maturity date with principal still outstanding, since §7 lets the Lender demand payment from the Co-Maker at that point.</li>' +
+        '</ol>' +
+      '</div>';
+    wireHeader();
+  }
+
+  function defaultLoanDraft() {
+    return {
+      agreementDate: todayStr(),
+      lenderName: "", lenderAddress: "", borrowerName: "", borrowerAddress: "",
+      coMakerName: "", coMakerAddress: "", witness1Name: "", witness2Name: "",
+      principal: "", purpose: "",
+      installmentApproved: false, installmentWeeklyAmount: "", installmentStartDate: "", installmentFinalDueDate: "",
+      payments: []
+    };
+  }
+
+  function renderLoanForm(existing) {
+    var isEdit = !!existing;
+    var l = existing ? Object.assign({}, existing) : defaultLoanDraft();
+    app.innerHTML =
+      shellHeader(isEdit ? "" : "new") +
+      '<button class="back-link" id="back-btn">← Back</button>' +
+      '<div class="card pad">' +
+        '<div class="section-title">' + (isEdit ? "Edit loan" : "New emergency loan") + '</div>' +
+        '<p class="section-sub">Fills in the Emergency Loan Agreement template and starts tracking interest, penalties, and payments.</p>' +
+        '<form id="loan-form">' +
+          '<div class="form-grid">' +
+            field("Agreement date", "agreementDate", "date", l.agreementDate) +
+            field("Loan amount (PHP)", "principal", "number", l.principal, { step: "0.01", min: "0" }) +
+            field("Lender full name", "lenderName", "text", l.lenderName) +
+            field("Lender address", "lenderAddress", "text", l.lenderAddress) +
+            field("Borrower full name", "borrowerName", "text", l.borrowerName) +
+            field("Borrower address", "borrowerAddress", "text", l.borrowerAddress) +
+            field("Co-maker / guarantor full name", "coMakerName", "text", l.coMakerName) +
+            field("Co-maker address", "coMakerAddress", "text", l.coMakerAddress) +
+            field("Witness 1 name", "witness1Name", "text", l.witness1Name) +
+            field("Witness 2 name", "witness2Name", "text", l.witness2Name) +
+            '<label class="field span2"><span>Purpose of the loan</span><textarea name="purpose">' + esc(l.purpose) + '</textarea></label>' +
+          '</div>' +
+          '<div style="height:16px;"></div>' +
+          '<fieldset>' +
+            '<legend>Installment option (§4 — lender’s sole discretion)</legend>' +
+            '<label class="checkbox-row" style="margin-bottom:12px;"><input type="checkbox" name="installmentApproved" ' + (l.installmentApproved ? "checked" : "") + '> Installment arrangement approved</label>' +
+            '<div class="form-grid">' +
+              field("Proposed weekly installment (PHP)", "installmentWeeklyAmount", "number", l.installmentWeeklyAmount, { step: "0.01", min: "0" }) +
+              field("Installment start date", "installmentStartDate", "date", l.installmentStartDate) +
+              field("Final due date", "installmentFinalDueDate", "date", l.installmentFinalDueDate) +
+            '</div>' +
+          '</fieldset>' +
+          '<div style="height:20px;"></div>' +
+          '<div class="row-between">' +
+            (isEdit ? '<button type="button" class="btn btn-danger" id="delete-btn">Delete loan</button>' : '<span></span>') +
+            '<button type="submit" class="btn btn-primary">' + (isEdit ? "Save changes" : "Create loan") + '</button>' +
+          '</div>' +
+        '</form>' +
+      '</div>';
+    wireHeader();
+    document.getElementById("back-btn").addEventListener("click", function () { state.view = isEdit ? "detail" : "dashboard"; render(); });
+    document.getElementById("loan-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var data = {
+        agreementDate: fd.get("agreementDate") || todayStr(),
+        principal: Number(fd.get("principal")) || 0,
+        lenderName: fd.get("lenderName") || "", lenderAddress: fd.get("lenderAddress") || "",
+        borrowerName: fd.get("borrowerName") || "", borrowerAddress: fd.get("borrowerAddress") || "",
+        coMakerName: fd.get("coMakerName") || "", coMakerAddress: fd.get("coMakerAddress") || "",
+        witness1Name: fd.get("witness1Name") || "", witness2Name: fd.get("witness2Name") || "",
+        purpose: fd.get("purpose") || "",
+        installmentApproved: fd.get("installmentApproved") === "on",
+        installmentWeeklyAmount: Number(fd.get("installmentWeeklyAmount")) || 0,
+        installmentStartDate: fd.get("installmentStartDate") || "",
+        installmentFinalDueDate: fd.get("installmentFinalDueDate") || "",
+        payments: l.payments || []
+      };
+      var submitBtn = e.target.querySelector("button[type=submit]");
+      submitBtn.disabled = true;
+      var task = isEdit
+        ? updateDoc(doc(db, "loans", l.id), data).then(function () { return l.id; })
+        : addDoc(collection(db, "loans"), Object.assign({ ownerId: currentUser.uid }, data)).then(function (ref) { return ref.id; });
+      task.then(function (id) {
+        state.view = "detail"; state.currentLoanId = id;
+        render();
+      }).catch(function (err) {
+        submitBtn.disabled = false;
+        showToast("Couldn't save: " + err.message);
+      });
+    });
+    if (isEdit) {
+      document.getElementById("delete-btn").addEventListener("click", function () {
+        if (confirm("Delete this loan and its full payment history? This cannot be undone.")) {
+          deleteDoc(doc(db, "loans", l.id)).then(function () {
+            state.view = "dashboard"; render();
+          }).catch(function (err) { showToast("Couldn't delete: " + err.message); });
+        }
+      });
+    }
+  }
+  function field(label, name, type, value, extra) {
+    extra = extra || {};
+    var attrs = Object.keys(extra).map(function (k) { return k + '="' + extra[k] + '"'; }).join(" ");
+    return '<label class="field"><span>' + label + '</span><input type="' + type + '" name="' + name + '" value="' + esc(value) + '" ' + attrs + '></label>';
+  }
+
+  function renderDetail(loan) {
+    if (!loan) { state.view = "dashboard"; render(); return; }
+    var asOf = state.asOf;
+    var k = computeLoan(loan, asOf);
+
+    var weekRows = k.weekSchedule.map(function (w) {
+      return '<tr><td>Week ' + w.weekNum + '</td><td>' + humanDate(w.start) + ' – ' + humanDate(w.end) + '</td>' +
+        '<td class="num">' + (w.rate * 100).toFixed(0) + '%</td><td class="num">' + peso(w.principalBasis) + '</td><td class="num" style="color:var(--gold);">' + peso(w.interest) + '</td></tr>';
+    }).join("") || '<tr><td colspan="5" style="color:var(--faint);">No full week has elapsed yet as of ' + humanDate(asOf) + '.</td></tr>';
+
+    var ledgerRows = k.ledger.map(function (e) {
+      var desc = e.desc;
+      if (e.type === "payment") {
+        desc += ' <span style="color:var(--faint);">(→ penalty ' + peso(e.breakdown.penalty) + ", interest " + peso(e.breakdown.interest) + ", principal " + peso(e.breakdown.principal) + (e.breakdown.overpaid > 0 ? ", unallocated " + peso(e.breakdown.overpaid) : "") + ')</span>';
+      }
+      var sign = e.type === "payment" ? "−" : "+";
+      return '<tr class="ledger-row type-' + e.type + '"><td>' + humanDate(e.date) + '</td><td>' + desc + '</td><td class="num">' + sign + peso(Math.abs(e.amount)) + '</td><td class="num">' + peso(e.principalAfter) + '</td></tr>';
+    }).join("") || '<tr><td colspan="4" style="color:var(--faint);">No activity yet.</td></tr>';
+
+    app.innerHTML =
+      shellHeader("") +
+      '<button class="back-link" id="back-btn">← Back to dashboard</button>' +
+      '<div class="detail-header">' +
+        '<div><h2>' + esc(loan.borrowerName || "Unnamed borrower") + '</h2>' +
+          '<div class="meta">Principal ' + peso(loan.principal) + ' · agreed ' + humanDate(loan.agreementDate) + ' · matures ' + humanDate(k.maturity) + ' · co-maker ' + esc(loan.coMakerName || "—") + '</div></div>' +
+        '<div class="badges">' +
+          '<span class="chip chip-' + k.status + '">' + STATUS_LABEL[k.status] + '</span>' +
+          (k.coMakerLiable ? '<span class="chip chip-overdue">Co-maker liable</span>' : '') +
+          '<button class="btn btn-sm" id="edit-btn">Edit</button>' +
+          '<button class="btn btn-sm" id="print-btn">Download contract</button>' +
+        '</div>' +
+      '</div>' +
+      (k.coMakerLiable ? '<div class="callout critical"><span>⚠️</span><span><strong>' + k.daysOverdue + ' day(s) overdue.</strong> Per §7, the Lender may now demand payment from the Co-Maker (' + esc(loan.coMakerName || "unnamed") + ') for the full outstanding balance.</span></div>' : '') +
+      '<div class="stat-row">' +
+        statCard("Principal outstanding", peso(k.principalOutstanding)) +
+        statCard("Interest accrued (unpaid)", peso(k.interestAccrued), "20%/week, 30%/week once overdue", "gold") +
+        statCard("Penalty accrued (unpaid)", peso(k.penaltyAccrued), "3%/day once overdue", k.penaltyAccrued > 0 ? "critical" : "") +
+        statCard("Total due now", peso(k.totalDue), "as of " + humanDate(asOf)) +
+      '</div>' +
+      '<div class="card pad" style="margin-bottom:18px;">' +
+        '<div class="row-between">' +
+          '<div><div class="section-title" style="font-size:16px;">Record a payment</div></div>' +
+          '<label class="field" style="width:170px;"><span>Calculate as of</span><input type="date" id="asof-input" value="' + asOf + '"></label>' +
+        '</div>' +
+        '<form id="payment-form" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px;">' +
+          '<label class="field" style="width:160px;"><span>Date</span><input type="date" name="date" value="' + asOf + '" required></label>' +
+          '<label class="field" style="width:160px;"><span>Amount (PHP)</span><input type="number" name="amount" step="0.01" min="0.01" required></label>' +
+          '<label class="field" style="flex:1;min-width:180px;"><span>Note (optional)</span><input type="text" name="note" placeholder="e.g. weekly interest, GCash ref#"></label>' +
+          '<button type="submit" class="btn btn-primary">Add payment</button>' +
+        '</form>' +
+      '</div>' +
+      '<div class="card pad" style="margin-bottom:18px;">' +
+        '<div class="section-title" style="font-size:16px;">Weekly interest schedule</div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Week</th><th>Period</th><th class="num">Rate</th><th class="num">Principal basis</th><th class="num">Interest charged</th></tr></thead><tbody>' + weekRows + '</tbody></table></div>' +
+      '</div>' +
+      '<div class="card pad">' +
+        '<div class="section-title" style="font-size:16px;">Ledger</div>' +
+        '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Event</th><th class="num">Amount</th><th class="num">Principal after</th></tr></thead><tbody>' + ledgerRows + '</tbody></table></div>' +
+      '</div>';
+
+    wireHeader();
+    document.getElementById("back-btn").addEventListener("click", function () { state.view = "dashboard"; render(); });
+    document.getElementById("edit-btn").addEventListener("click", function () { state.view = "edit"; render(); });
+    document.getElementById("print-btn").addEventListener("click", function () { printContract(loan); });
+    document.getElementById("asof-input").addEventListener("change", function (e) { state.asOf = e.target.value || todayStr(); render(); });
+    document.getElementById("payment-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var amount = Number(fd.get("amount"));
+      if (!amount || amount <= 0) return;
+      var submitBtn = e.target.querySelector("button[type=submit]");
+      submitBtn.disabled = true;
+      var payments = (loan.payments || []).concat([{ id: uid(), date: fd.get("date") || todayStr(), amount: amount, note: fd.get("note") || "" }]);
+      updateDoc(doc(db, "loans", loan.id), { payments: payments }).catch(function (err) {
+        submitBtn.disabled = false;
+        showToast("Couldn't save payment: " + err.message);
+      });
+    });
+  }
+
+  function wireHeader() {
+    document.querySelectorAll("nav.tabs button").forEach(function (b) {
+      b.addEventListener("click", function () { state.view = b.getAttribute("data-tab"); render(); });
+    });
+    var exportBtn = document.getElementById("btn-export");
+    if (exportBtn) exportBtn.addEventListener("click", exportJSON);
+    var importInput = document.getElementById("file-import");
+    if (importInput) importInput.addEventListener("change", importJSON);
+    var signOutBtn = document.getElementById("btn-signout");
+    if (signOutBtn) signOutBtn.addEventListener("click", function () { signOut(auth); });
+  }
+
+  function exportJSON() {
+    var blob = new Blob([JSON.stringify(loans, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "eloan-ledger-" + todayStr() + ".json"; a.click();
+    URL.revokeObjectURL(url);
+  }
+  function importJSON(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (!Array.isArray(data)) { showToast("That file doesn't look like a loan ledger export."); return; }
+        Promise.all(data.map(function (loan) {
+          var copy = Object.assign({}, loan);
+          delete copy.id;
+          copy.ownerId = currentUser.uid;
+          return addDoc(collection(db, "loans"), copy);
+        })).then(function () {
+          showToast("Imported " + data.length + " loan(s).");
+        }).catch(function (err) { showToast("Import failed: " + err.message); });
+      } catch (err) { showToast("Couldn't read that file: " + err.message); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  // ---------- contract printing ----------
+  function printContract(loan) {
+    var maturity = fmt(addDays(parseDate(loan.agreementDate), 28));
+    var html =
+      '<div class="contract-doc">' +
+        '<h1>EMERGENCY LOAN AGREEMENT</h1>' +
+        '<div class="date-line">Date: ' + humanDate(loan.agreementDate) + '</div>' +
+        '<p>This Emergency Loan Agreement ("Agreement") is entered into by and between the following parties:</p>' +
+        '<p><strong>Lender:</strong> ' + esc(loan.lenderName || "_______________________") + (loan.lenderAddress ? ", of " + esc(loan.lenderAddress) : "") + '</p>' +
+        '<p><strong>Borrower:</strong> ' + esc(loan.borrowerName || "_______________________") + (loan.borrowerAddress ? ", of " + esc(loan.borrowerAddress) : "") + '</p>' +
+        '<p><strong>Co-Maker / Guarantor:</strong> ' + esc(loan.coMakerName || "_______________________") + (loan.coMakerAddress ? ", of " + esc(loan.coMakerAddress) : "") + '</p>' +
+
+        '<h2>1. Loan Amount</h2>' +
+        '<p>The Lender agrees to lend the Borrower the amount of PHP ' + peso(loan.principal).replace("₱", "") + ' as an emergency loan.</p>' +
+
+        '<h2>2. Purpose of the Loan</h2>' +
+        '<p>This loan is intended solely for emergency purposes, specifically: ' + esc(loan.purpose || "_______________________") + '</p>' +
+
+        '<h2>3. Interest and Payment Terms</h2>' +
+        '<p>• The Borrower agrees to pay twenty percent (20%) interest per week on the principal amount.<br>' +
+        '• The loan shall have a maturity period of four (4) weeks (equivalent to one month) from the date this Agreement is executed, i.e. on or before ' + humanDate(maturity) + '.<br>' +
+        '• On or before the maturity date, the Borrower shall pay all outstanding weekly interest and the entire principal amount in full.<br>' +
+        '• If the Borrower fails to return the principal on or before the maturity date, the loan shall be considered overdue. Beginning immediately after the maturity date, the weekly interest rate shall automatically increase to thirty percent (30%) per week until the principal is fully paid, unless otherwise agreed to in writing by the Lender.<br>' +
+        '• The Borrower acknowledges that the interest rate and payment terms were voluntarily accepted and fully understood prior to signing this Agreement.</p>' +
+
+        '<h2>4. Installment Option (Subject to Lender’s Sole Approval)</h2>' +
+        '<p>Granting an installment arrangement shall be entirely at the discretion of the Lender.' +
+        (loan.installmentApproved
+          ? '<br>If approved: Proposed Weekly Installment: PHP ' + peso(loan.installmentWeeklyAmount).replace("₱", "") + '; Installment Start Date: ' + humanDate(loan.installmentStartDate) + '; Final Due Date: ' + humanDate(loan.installmentFinalDueDate) + '.'
+          : ' No installment arrangement has been approved for this loan.') +
+        ' Interest adjustments, if any, shall be determined by the Lender based on the remaining balance and payment performance.</p>' +
+
+        '<h2>5. Late Payment Penalty</h2>' +
+        '<p>Failure to pay any amount due on its scheduled date shall result in a penalty of three percent (3%) per day computed on the unpaid principal until the overdue amount has been fully settled. The imposition of this penalty shall not prevent the Lender from exercising any other rights provided under this Agreement.</p>' +
+
+        '<h2>6. Default</h2>' +
+        '<p>The Borrower shall be considered in default upon failure to comply with the payment obligations under this Agreement. Upon default, the Lender may immediately: (a) demand full payment of the outstanding principal, accrued interest, penalties, and other lawful charges; (b) refer the matter for barangay conciliation or initiate any legal remedy available under the laws of the Republic of the Philippines.</p>' +
+
+        '<h2>7. Co-Maker’s Undertaking</h2>' +
+        '<p>The Co-Maker (Guarantor) hereby voluntarily agrees to be jointly responsible for the Borrower’s obligations under this Agreement. In the event that the Borrower fails, refuses, or is unable to pay the loan, including the principal, interest, penalties, and other lawful charges, the Co-Maker agrees to pay the outstanding obligation upon the Lender’s demand. The Co-Maker acknowledges that this obligation is voluntarily assumed and remains effective until the loan has been fully settled.</p>' +
+
+        '<h2>8. Legal Compliance</h2>' +
+        '<p>This Agreement shall be governed by the laws of the Republic of the Philippines. Both parties acknowledge that this is a private lending transaction entered into voluntarily. The Borrower confirms that all terms, including the agreed interest, penalties, and obligations, were fully explained, understood, and accepted without force, intimidation, fraud, or undue influence.</p>' +
+
+        '<h2>9. Entire Agreement</h2>' +
+        '<p>This Agreement constitutes the complete understanding between the parties. Any amendment or modification shall be valid only if made in writing and signed by the Lender, Borrower, and Co-Maker.</p>' +
+
+        '<div class="sig">' +
+          '<div class="sig-line"><span>LENDER<br>Name: ' + esc(loan.lenderName) + '</span><span>Signature: _______________</span><span>Date: _______________</span></div>' +
+          '<div class="sig-line"><span>BORROWER<br>Name: ' + esc(loan.borrowerName) + '</span><span>Signature: _______________</span><span>Date: _______________</span></div>' +
+          '<div class="sig-line"><span>CO-MAKER / GUARANTOR<br>Name: ' + esc(loan.coMakerName) + '</span><span>Signature: _______________</span><span>Date: _______________</span></div>' +
+        '</div>' +
+        '<h2>Witnesses</h2>' +
+        '<div class="sig-line"><span>Name: ' + esc(loan.witness1Name) + '</span><span>Signature: _______________</span><span>Date: _______________</span></div>' +
+        '<div class="sig-line"><span>Name: ' + esc(loan.witness2Name) + '</span><span>Signature: _______________</span><span>Date: _______________</span></div>' +
+      '</div>';
+
+    var docHtml =
+      '<!doctype html><html><head><meta charset="utf-8">' +
+      '<title>Emergency Loan Agreement — ' + esc(loan.borrowerName || "Borrower") + '</title>' +
+      '<style>' +
+        'body{font-family:Georgia,"Times New Roman",serif;color:#111;max-width:760px;margin:32px auto;padding:0 20px;font-size:13px;line-height:1.6;}' +
+        'h1{font-size:20px;text-align:center;margin-bottom:2px;}' +
+        '.date-line{text-align:center;margin-bottom:18px;font-size:12.5px;}' +
+        'h2{font-size:13px;margin:16px 0 4px;}' +
+        'p{margin:4px 0;}' +
+        '.sig{margin-top:26px;}' +
+        '.sig-line{display:flex;gap:20px;margin:18px 0 4px;font-size:12.5px;}' +
+        '.sig-line span{border-bottom:1px solid #333;padding-bottom:2px;flex:1;}' +
+        '.toolbar{max-width:760px;margin:0 auto 12px;text-align:right;}' +
+        '.toolbar button{font-family:sans-serif;font-size:13px;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid #999;background:#f4f4f4;cursor:pointer;}' +
+        '@media print{.toolbar{display:none;}body{margin:0 auto;}}' +
+      '</style></head><body>' +
+      '<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div>' +
+      html +
+      '</body></html>';
+
+    var blob = new Blob([docHtml], { type: "text/html" });
+    var url = URL.createObjectURL(blob);
+    var filename = "loan-agreement-" + (loan.borrowerName || "borrower").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + loan.agreementDate + ".html";
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    showToast("Contract downloaded as “" + filename + "” — open it and use Print / Save as PDF.");
+  }
+
+  function showToast(message) {
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(function () { el.classList.add("hide"); }, 4500);
+    setTimeout(function () { el.remove(); }, 5000);
+  }
+</script>
+</body>
+</html>
